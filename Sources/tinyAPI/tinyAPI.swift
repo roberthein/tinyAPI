@@ -1,7 +1,7 @@
 import Foundation
 
 // MARK: - Core Protocol
-protocol TinyAPIEndpoint: Sendable {
+public protocol TinyAPIEndpoint: Sendable {
     var baseURL: String { get }
     var path: String { get }
     var method: HTTPMethod { get }
@@ -11,19 +11,19 @@ protocol TinyAPIEndpoint: Sendable {
 }
 
 // MARK: - HTTP Method
-enum HTTPMethod: String, Sendable {
+public enum HTTPMethod: String, Sendable {
     case GET, POST, PUT, DELETE, PATCH
 }
 
 // MARK: - API Errors
-enum TinyAPIError: Error, LocalizedError, Sendable {
+public enum TinyAPIError: Error, LocalizedError, Sendable {
     case invalidURL
     case noData
     case decodingError(String)
     case httpError(Int)
     case networkError(String)
 
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .invalidURL: return "Invalid URL"
         case .noData: return "No data received"
@@ -35,42 +35,42 @@ enum TinyAPIError: Error, LocalizedError, Sendable {
 }
 
 // MARK: - Request State for TCA
-enum RequestState<T: Sendable>: Sendable, Equatable where T: Equatable {
+public enum RequestState<T: Sendable>: Sendable, Equatable where T: Equatable {
     case idle
     case loading
     case success(T)
     case failure(String)
 
-    var isLoading: Bool {
+    public var isLoading: Bool {
         if case .loading = self { return true }
         return false
     }
 
-    var data: T? {
+    public var data: T? {
         if case .success(let data) = self { return data }
         return nil
     }
 
-    var error: String? {
+    public var error: String? {
         if case .failure(let error) = self { return error }
         return nil
     }
 }
 
 // MARK: - Main API Client as Dependency
-struct TinyAPIClient: Sendable {
+public struct TinyAPIClient: Sendable {
     let session: URLSession
     let decoder: JSONDecoder
     let encoder: JSONEncoder
 
-    init(session: URLSession = .shared) {
+    public init(session: URLSession = .shared) {
         self.session = session
         self.decoder = JSONDecoder()
         self.encoder = JSONEncoder()
     }
 
     // Generic request method
-    func request<T: Codable & Sendable>(_ endpoint: TinyAPIEndpoint, as type: T.Type) async throws -> T {
+    public func request<T: Codable & Sendable>(_ endpoint: TinyAPIEndpoint, as type: T.Type) async throws -> T {
         let request = try buildRequest(from: endpoint)
 
         do {
@@ -101,7 +101,7 @@ struct TinyAPIClient: Sendable {
     }
 
     // Raw data request
-    func requestData(_ endpoint: TinyAPIEndpoint) async throws -> Data {
+    public func requestData(_ endpoint: TinyAPIEndpoint) async throws -> Data {
         let request = try buildRequest(from: endpoint)
 
         do {
@@ -154,15 +154,15 @@ struct TinyAPIClient: Sendable {
 }
 
 // MARK: - Simple Endpoint Builder
-struct SimpleEndpoint: TinyAPIEndpoint {
-    let baseURL: String
-    let path: String
-    let method: HTTPMethod
-    let headers: [String: String]?
-    let queryItems: [URLQueryItem]?
-    let body: Data?
+public struct SimpleEndpoint: TinyAPIEndpoint {
+    public let baseURL: String
+    public let path: String
+    public let method: HTTPMethod
+    public let headers: [String: String]?
+    public let queryItems: [URLQueryItem]?
+    public let body: Data?
 
-    init(
+    public init(
         baseURL: String,
         path: String,
         method: HTTPMethod = .GET,
@@ -180,9 +180,9 @@ struct SimpleEndpoint: TinyAPIEndpoint {
 }
 
 // MARK: - Convenience Extensions for Direct Usage
-extension TinyAPIClient {
+public extension TinyAPIClient {
     // GET request
-    func get<T: Codable & Sendable>(
+    public func get<T: Codable & Sendable>(
         from baseURL: String,
         path: String,
         queryItems: [URLQueryItem]? = nil,
@@ -200,7 +200,7 @@ extension TinyAPIClient {
     }
 
     // POST request with Codable body
-    func post<T: Codable & Sendable, U: Codable & Sendable>(
+    public func post<T: Codable & Sendable, U: Codable & Sendable>(
         to baseURL: String,
         path: String,
         body: T,
@@ -219,7 +219,7 @@ extension TinyAPIClient {
     }
 
     // PUT request with Codable body
-    func put<T: Codable & Sendable, U: Codable & Sendable>(
+    public func put<T: Codable & Sendable, U: Codable & Sendable>(
         to baseURL: String,
         path: String,
         body: T,
@@ -238,7 +238,7 @@ extension TinyAPIClient {
     }
 
     // DELETE request
-    func delete<T: Codable & Sendable>(
+    public func delete<T: Codable & Sendable>(
         from baseURL: String,
         path: String,
         headers: [String: String]? = nil,
@@ -255,17 +255,17 @@ extension TinyAPIClient {
 }
 
 // MARK: - Mock API Client for Local JSON
-struct MockTinyAPIClient: Sendable {
+public struct MockTinyAPIClient: Sendable {
     private let decoder: JSONDecoder
     private let delay: TimeInterval
 
-    init(delay: TimeInterval = 0.5) {
+    public init(delay: TimeInterval = 0.5) {
         self.decoder = JSONDecoder()
         self.delay = delay
     }
 
     // Generic request method that loads from local JSON
-    func request<T: Codable & Sendable>(_ endpoint: TinyAPIEndpoint, as type: T.Type) async throws -> T {
+    public func request<T: Codable & Sendable>(_ endpoint: TinyAPIEndpoint, as type: T.Type) async throws -> T {
         // Simulate network delay
         if delay > 0 {
             try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
@@ -287,7 +287,7 @@ struct MockTinyAPIClient: Sendable {
     }
 
     // Raw data request for local files
-    func requestData(_ endpoint: TinyAPIEndpoint) async throws -> Data {
+    public func requestData(_ endpoint: TinyAPIEndpoint) async throws -> Data {
         if delay > 0 {
             try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
         }
@@ -317,7 +317,7 @@ struct MockTinyAPIClient: Sendable {
 }
 
 // MARK: - Convenience extensions for MockTinyAPIClient
-extension MockTinyAPIClient {
+public extension MockTinyAPIClient {
     // GET request
     func get<T: Codable & Sendable>(
         from baseURL: String,
@@ -337,7 +337,7 @@ extension MockTinyAPIClient {
     }
 
     // POST request with Codable body
-    func post<T: Codable & Sendable, U: Codable & Sendable>(
+    public func post<T: Codable & Sendable, U: Codable & Sendable>(
         to baseURL: String,
         path: String,
         body: T,
@@ -356,7 +356,7 @@ extension MockTinyAPIClient {
 }
 
 // MARK: - Protocol for API Client abstraction
-protocol APIClientProtocol: Sendable {
+public protocol APIClientProtocol: Sendable {
     func request<T: Codable & Sendable>(_ endpoint: TinyAPIEndpoint, as type: T.Type) async throws -> T
     func requestData(_ endpoint: TinyAPIEndpoint) async throws -> Data
 }
@@ -365,11 +365,11 @@ extension TinyAPIClient: APIClientProtocol {}
 extension MockTinyAPIClient: APIClientProtocol {}
 
 // MARK: - Dependency Registration for tinyTCA
-extension TinyAPIClient {
+public extension TinyAPIClient {
     static let live = TinyAPIClient()
 }
 
-extension MockTinyAPIClient {
+public extension MockTinyAPIClient {
     static let preview = MockTinyAPIClient(delay: 0.1) // Fast for previews
     static let testing = MockTinyAPIClient(delay: 0.0) // Instant for tests
     static let demo = MockTinyAPIClient(delay: 1.0) // Realistic delay for demos
